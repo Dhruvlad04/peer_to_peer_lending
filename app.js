@@ -31,11 +31,168 @@ const CONTRACT_ADDRESS =
 // ============================================================
 
 const CONTRACT_ABI = [
-
-    // --------------------------------------------------------
-    // requestLoan
-    // --------------------------------------------------------
-
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_loanId",
+                "type": "uint256"
+            }
+        ],
+        "name": "claimCollateral",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_loanId",
+                "type": "uint256"
+            }
+        ],
+        "name": "fundLoan",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "ReentrancyGuardReentrantCall",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "lender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "collateralAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "LoanDefaulted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "lender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "LoanFunded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "totalAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "LoanRepaid",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "loanId",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "loanAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "collateralAmount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "interestRate",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "duration",
+                "type": "uint256"
+            }
+        ],
+        "name": "LoanRequested",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_loanId",
+                "type": "uint256"
+            }
+        ],
+        "name": "repayLoan",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
     {
         "inputs": [
             {
@@ -65,31 +222,10 @@ const CONTRACT_ABI = [
         "stateMutability": "payable",
         "type": "function"
     },
-
-
-    // --------------------------------------------------------
-    // fundLoan
-    // --------------------------------------------------------
-
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_loanId",
-                "type": "uint256"
-            }
-        ],
-        "name": "fundLoan",
-        "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
+        "type": "receive"
     },
-
-
-    // --------------------------------------------------------
-    // repayLoan
-    // --------------------------------------------------------
-
     {
         "inputs": [
             {
@@ -98,36 +234,77 @@ const CONTRACT_ABI = [
                 "type": "uint256"
             }
         ],
-        "name": "repayLoan",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-
-
-    // --------------------------------------------------------
-    // claimCollateral
-    // --------------------------------------------------------
-
-    {
-        "inputs": [
+        "name": "calculateInterest",
+        "outputs": [
             {
                 "internalType": "uint256",
-                "name": "_loanId",
+                "name": "",
                 "type": "uint256"
             }
         ],
-        "name": "claimCollateral",
-        "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     },
-
-
-    // --------------------------------------------------------
-    // getLoan
-    // --------------------------------------------------------
-
+    {
+        "inputs": [],
+        "name": "getAllLoans",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address payable",
+                        "name": "borrower",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address payable",
+                        "name": "lender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "loanAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "collateralAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "interestRate",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "duration",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "fundedAt",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "enum P2PLending.Status",
+                        "name": "status",
+                        "type": "uint8"
+                    }
+                ],
+                "internalType": "struct P2PLending.Loan[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
     {
         "inputs": [
             {
@@ -181,7 +358,7 @@ const CONTRACT_ABI = [
                         "type": "uint256"
                     },
                     {
-                        "internalType": "uint8",
+                        "internalType": "enum P2PLending.Status",
                         "name": "status",
                         "type": "uint8"
                     }
@@ -194,97 +371,25 @@ const CONTRACT_ABI = [
         "stateMutability": "view",
         "type": "function"
     },
-
-
-    // --------------------------------------------------------
-    // loanCounter
-    // --------------------------------------------------------
-
     {
-        "inputs": [],
-        "name": "loanCounter",
-        "outputs": [
+        "inputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "_loanId",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-
-
-    // --------------------------------------------------------
-    // getAllLoans
-    // --------------------------------------------------------
-
-    {
-        "inputs": [],
-        "name": "getAllLoans",
+        "name": "getLoanStatus",
         "outputs": [
             {
-                "components": [
-                    {
-                        "internalType": "uint256",
-                        "name": "id",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "borrower",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "lender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "loanAmount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "collateralAmount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "interestRate",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "duration",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "fundedAt",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint8",
-                        "name": "status",
-                        "type": "uint8"
-                    }
-                ],
-                "internalType": "struct P2PLending.Loan[]",
+                "internalType": "enum P2PLending.Status",
                 "name": "",
-                "type": "tuple[]"
+                "type": "uint8"
             }
         ],
         "stateMutability": "view",
         "type": "function"
     },
-
-
-    // --------------------------------------------------------
-    // getRepaymentAmount
-    // --------------------------------------------------------
-
     {
         "inputs": [
             {
@@ -304,12 +409,6 @@ const CONTRACT_ABI = [
         "stateMutability": "view",
         "type": "function"
     },
-
-
-    // --------------------------------------------------------
-    // isOverdue
-    // --------------------------------------------------------
-
     {
         "inputs": [
             {
@@ -324,6 +423,78 @@ const CONTRACT_ABI = [
                 "internalType": "bool",
                 "name": "",
                 "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "loanCounter",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "loans",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address payable",
+                "name": "borrower",
+                "type": "address"
+            },
+            {
+                "internalType": "address payable",
+                "name": "lender",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "loanAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "collateralAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "interestRate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "duration",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "fundedAt",
+                "type": "uint256"
+            },
+            {
+                "internalType": "enum P2PLending.Status",
+                "name": "status",
+                "type": "uint8"
             }
         ],
         "stateMutability": "view",
