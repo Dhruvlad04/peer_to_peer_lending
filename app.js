@@ -2,181 +2,38 @@
 // P2P LENDING DAPP - APP.JS
 // ==========================================
 
-let provider;
-let signer;
-let contract;
-let userAddress;
+// ==========================================
+// GLOBAL VARIABLES
+// ==========================================
+
+let provider = null;
+let signer = null;
+let contract = null;
+let userAddress = null;
 
 
 // ==========================================
 // CONTRACT CONFIGURATION
 // ==========================================
 
-const CONTRACT_ADDRESS = "0xE1Ad80cE4A25e81af16F75532F71439a905C6751";
+// YOUR DEPLOYED SEPOLIA CONTRACT
+const CONTRACT_ADDRESS =
+    "0x1dD04C337023260540205e966cfdDA594Bc66b2A";
+
+// Ethereum Sepolia Chain ID
+const SEPOLIA_CHAIN_ID = 11155111n;
+
+
+// ==========================================
+// CONTRACT ABI
+// ==========================================
 
 const CONTRACT_ABI = [
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_loanId",
-                "type": "uint256"
-            }
-        ],
-        "name": "claimCollateral",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_loanId",
-                "type": "uint256"
-            }
-        ],
-        "name": "fundLoan",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "ReentrancyGuardReentrantCall",
-        "type": "error"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "loanId",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "lender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "collateralAmount",
-                "type": "uint256"
-            }
-        ],
-        "name": "LoanDefaulted",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "loanId",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "lender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "LoanFunded",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "loanId",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "borrower",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "totalAmount",
-                "type": "uint256"
-            }
-        ],
-        "name": "LoanRepaid",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "loanId",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "borrower",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "loanAmount",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "collateralAmount",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "interestRate",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "duration",
-                "type": "uint256"
-            }
-        ],
-        "name": "LoanRequested",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_loanId",
-                "type": "uint256"
-            }
-        ],
-        "name": "repayLoan",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
+
+    // ------------------------------------------
+    // requestLoan
+    // ------------------------------------------
+
     {
         "inputs": [
             {
@@ -206,10 +63,11 @@ const CONTRACT_ABI = [
         "stateMutability": "payable",
         "type": "function"
     },
-    {
-        "stateMutability": "payable",
-        "type": "receive"
-    },
+
+    // ------------------------------------------
+    // fundLoan
+    // ------------------------------------------
+
     {
         "inputs": [
             {
@@ -218,77 +76,52 @@ const CONTRACT_ABI = [
                 "type": "uint256"
             }
         ],
-        "name": "calculateInterest",
-        "outputs": [
+        "name": "fundLoan",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+
+    // ------------------------------------------
+    // repayLoan
+    // ------------------------------------------
+
+    {
+        "inputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "_loanId",
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "repayLoan",
+        "outputs": [],
+        "stateMutability": "payable",
         "type": "function"
     },
+
+    // ------------------------------------------
+    // claimCollateral
+    // ------------------------------------------
+
     {
-        "inputs": [],
-        "name": "getAllLoans",
-        "outputs": [
+        "inputs": [
             {
-                "components": [
-                    {
-                        "internalType": "uint256",
-                        "name": "id",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "borrower",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "lender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "loanAmount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "collateralAmount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "interestRate",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "duration",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "fundedAt",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "enum P2PLending.Status",
-                        "name": "status",
-                        "type": "uint8"
-                    }
-                ],
-                "internalType": "struct P2PLending.Loan[]",
-                "name": "",
-                "type": "tuple[]"
+                "internalType": "uint256",
+                "name": "_loanId",
+                "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "name": "claimCollateral",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
+
+    // ------------------------------------------
+    // getLoan
+    // ------------------------------------------
+
     {
         "inputs": [
             {
@@ -342,7 +175,7 @@ const CONTRACT_ABI = [
                         "type": "uint256"
                     },
                     {
-                        "internalType": "enum P2PLending.Status",
+                        "internalType": "uint8",
                         "name": "status",
                         "type": "uint8"
                     }
@@ -355,25 +188,94 @@ const CONTRACT_ABI = [
         "stateMutability": "view",
         "type": "function"
     },
+
+    // ------------------------------------------
+    // loanCounter
+    // ------------------------------------------
+
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_loanId",
-                "type": "uint256"
-            }
-        ],
-        "name": "getLoanStatus",
+        "inputs": [],
+        "name": "loanCounter",
         "outputs": [
             {
-                "internalType": "enum P2PLending.Status",
+                "internalType": "uint256",
                 "name": "",
-                "type": "uint8"
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
         "type": "function"
     },
+
+    // ------------------------------------------
+    // getAllLoans
+    // ------------------------------------------
+
+    {
+        "inputs": [],
+        "name": "getAllLoans",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "id",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address payable",
+                        "name": "borrower",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address payable",
+                        "name": "lender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "loanAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "collateralAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "interestRate",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "duration",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "fundedAt",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "status",
+                        "type": "uint8"
+                    }
+                ],
+                "internalType": "struct P2PLending.Loan[]",
+                "name": "",
+                "type": "tuple[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+
+    // ------------------------------------------
+    // getRepaymentAmount
+    // ------------------------------------------
+
     {
         "inputs": [
             {
@@ -393,6 +295,11 @@ const CONTRACT_ABI = [
         "stateMutability": "view",
         "type": "function"
     },
+
+    // ------------------------------------------
+    // isOverdue
+    // ------------------------------------------
+
     {
         "inputs": [
             {
@@ -411,80 +318,360 @@ const CONTRACT_ABI = [
         ],
         "stateMutability": "view",
         "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "loanCounter",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "loans",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address payable",
-                "name": "borrower",
-                "type": "address"
-            },
-            {
-                "internalType": "address payable",
-                "name": "lender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "loanAmount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "collateralAmount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "interestRate",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "duration",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "fundedAt",
-                "type": "uint256"
-            },
-            {
-                "internalType": "enum P2PLending.Status",
-                "name": "status",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
     }
-]
+];
+
+
+// ==========================================
+// LOAN STATUS
+// ==========================================
+
+const STATUS = {
+    0: "Requested",
+    1: "Funded",
+    2: "Repaid",
+    3: "Defaulted"
+};
+
+
+// ==========================================
+// CONNECT WALLET
+// ==========================================
+
+async function connectWallet() {
+
+    console.log("==================================");
+    console.log("CONNECT WALLET BUTTON CLICKED");
+    console.log("==================================");
+
+    try {
+
+        // --------------------------------------
+        // CHECK METAMASK
+        // --------------------------------------
+
+        if (!window.ethereum) {
+
+            alert(
+                "MetaMask is not installed.\n\n" +
+                "Please install MetaMask and try again."
+            );
+
+            return;
+        }
+
+        console.log("MetaMask detected");
+
+
+        // --------------------------------------
+        // SWITCH TO SEPOLIA
+        // --------------------------------------
+
+        try {
+
+            await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [
+                    {
+                        chainId: "0xaa36a7"
+                    }
+                ]
+            });
+
+            console.log("Switched to Sepolia");
+
+        } catch (switchError) {
+
+            console.error(
+                "Network switch error:",
+                switchError
+            );
+
+            // If Sepolia is not added
+            if (switchError.code === 4902) {
+
+                try {
+
+                    await window.ethereum.request({
+                        method: "wallet_addEthereumChain",
+                        params: [
+                            {
+                                chainId: "0xaa36a7",
+                                chainName: "Sepolia Test Network",
+                                nativeCurrency: {
+                                    name: "Sepolia ETH",
+                                    symbol: "ETH",
+                                    decimals: 18
+                                },
+                                rpcUrls: [
+                                    "https://rpc.sepolia.org"
+                                ],
+                                blockExplorerUrls: [
+                                    "https://sepolia.etherscan.io"
+                                ]
+                            }
+                        ]
+                    });
+
+                } catch (addError) {
+
+                    console.error(
+                        "Add Sepolia error:",
+                        addError
+                    );
+
+                    alert(
+                        "Unable to add Sepolia network."
+                    );
+
+                    return;
+                }
+
+            } else {
+
+                alert(
+                    "Please switch MetaMask to Sepolia Test Network."
+                );
+
+                return;
+            }
+        }
+
+
+        // --------------------------------------
+        // REQUEST ACCOUNT
+        // --------------------------------------
+
+        const accounts =
+            await window.ethereum.request({
+                method: "eth_requestAccounts"
+            });
+
+
+        if (
+            !accounts ||
+            accounts.length === 0
+        ) {
+
+            alert(
+                "No MetaMask account selected."
+            );
+
+            return;
+        }
+
+
+        userAddress = accounts[0];
+
+
+        console.log(
+            "Wallet connected:",
+            userAddress
+        );
+
+
+        // --------------------------------------
+        // CREATE ETHERS PROVIDER
+        // --------------------------------------
+
+        provider =
+            new ethers.BrowserProvider(
+                window.ethereum
+            );
+
+
+        // --------------------------------------
+        // GET SIGNER
+        // --------------------------------------
+
+        signer =
+            await provider.getSigner();
+
+
+        // --------------------------------------
+        // GET NETWORK
+        // --------------------------------------
+
+        const network =
+            await provider.getNetwork();
+
+
+        console.log(
+            "Network:",
+            network.name
+        );
+
+
+        console.log(
+            "Chain ID:",
+            network.chainId.toString()
+        );
+
+
+        // --------------------------------------
+        // VERIFY SEPOLIA
+        // --------------------------------------
+
+        if (
+            network.chainId !==
+            SEPOLIA_CHAIN_ID
+        ) {
+
+            alert(
+                "Wrong network!\n\n" +
+                "Please use Sepolia Test Network.\n\n" +
+                "Required Chain ID: 11155111"
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // SHOW CONTRACT ADDRESS
+        // --------------------------------------
+
+        console.log(
+            "Contract:",
+            CONTRACT_ADDRESS
+        );
+
+
+        // --------------------------------------
+        // CHECK CONTRACT BYTECODE
+        // --------------------------------------
+
+        const code =
+            await provider.getCode(
+                CONTRACT_ADDRESS
+            );
+
+
+        console.log(
+            "Contract bytecode:",
+            code
+        );
+
+
+        if (code === "0x") {
+
+            alert(
+                "SMART CONTRACT NOT FOUND\n\n" +
+
+                "Contract:\n" +
+                CONTRACT_ADDRESS +
+
+                "\n\nNetwork:\n" +
+                network.name +
+
+                "\n\nChain ID:\n" +
+                network.chainId.toString() +
+
+                "\n\nPlease make sure the contract " +
+                "is deployed on Sepolia."
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // CREATE CONTRACT INSTANCE
+        // --------------------------------------
+
+        contract =
+            new ethers.Contract(
+                CONTRACT_ADDRESS,
+                CONTRACT_ABI,
+                signer
+            );
+
+
+        console.log(
+            "Smart contract connected successfully!"
+        );
+
+
+        // --------------------------------------
+        // UPDATE WALLET BUTTON
+        // --------------------------------------
+
+        updateWalletButton();
+
+
+        // --------------------------------------
+        // LOAD DATA
+        // --------------------------------------
+
+        await loadLoans();
+
+        await loadDashboard();
+
+        await loadMyLoans();
+
+
+        console.log(
+            "DApp initialized successfully."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "WALLET CONNECTION ERROR:",
+            error
+        );
+
+        alert(
+            "Wallet connection failed.\n\n" +
+            getErrorMessage(error)
+        );
+    }
+}
+
+
+// ==========================================
+// UPDATE WALLET BUTTON
+// ==========================================
+
+function updateWalletButton() {
+
+    const button =
+        document.getElementById(
+            "connectWallet"
+        );
+
+
+    if (!button) {
+
+        console.error(
+            "Button #connectWallet not found."
+        );
+
+        return;
+    }
+
+
+    if (!userAddress) {
+
+        button.textContent =
+            "Connect Wallet";
+
+        return;
+    }
+
+
+    button.textContent =
+        userAddress.substring(0, 6) +
+        "..." +
+        userAddress.substring(
+            userAddress.length - 4
+        );
+
+
+    button.classList.add(
+        "connected"
+    );
+}
 
 
 // ==========================================
@@ -494,6 +681,7 @@ const CONTRACT_ABI = [
 async function requestLoan(event) {
 
     event.preventDefault();
+
 
     try {
 
@@ -506,20 +694,24 @@ async function requestLoan(event) {
             return;
         }
 
+
         const loanAmount =
             document.getElementById(
                 "loanAmount"
             ).value;
+
 
         const interestRate =
             document.getElementById(
                 "interestRate"
             ).value;
 
+
         const duration =
             document.getElementById(
                 "duration"
             ).value;
+
 
         const collateral =
             document.getElementById(
@@ -536,6 +728,30 @@ async function requestLoan(event) {
 
             alert(
                 "Please fill all fields."
+            );
+
+            return;
+        }
+
+
+        if (
+            Number(loanAmount) <= 0
+        ) {
+
+            alert(
+                "Loan amount must be greater than zero."
+            );
+
+            return;
+        }
+
+
+        if (
+            Number(interestRate) <= 0
+        ) {
+
+            alert(
+                "Interest rate must be greater than zero."
             );
 
             return;
@@ -571,17 +787,26 @@ async function requestLoan(event) {
                 "button[type='submit']"
             );
 
-        button.disabled = true;
 
-        button.textContent =
-            "Creating Loan...";
+        if (button) {
+
+            button.disabled = true;
+
+            button.textContent =
+                "Creating Loan...";
+        }
+
+
+        console.log(
+            "Creating loan..."
+        );
 
 
         const tx =
             await contract.requestLoan(
                 loanAmountWei,
-                interestRate,
-                duration,
+                Number(interestRate),
+                Number(duration),
                 {
                     value: collateralWei
                 }
@@ -614,11 +839,16 @@ async function requestLoan(event) {
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Request loan error:",
+            error
+        );
+
 
         alert(
             getErrorMessage(error)
         );
+
 
     } finally {
 
@@ -626,6 +856,7 @@ async function requestLoan(event) {
             event.target.querySelector(
                 "button[type='submit']"
             );
+
 
         if (button) {
 
@@ -688,6 +919,12 @@ async function fundLoan(
         );
 
 
+        console.log(
+            "Funding transaction:",
+            tx.hash
+        );
+
+
         await tx.wait();
 
 
@@ -705,7 +942,11 @@ async function fundLoan(
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Fund loan error:",
+            error
+        );
+
 
         alert(
             getErrorMessage(error)
@@ -770,6 +1011,12 @@ async function repayLoan(
         );
 
 
+        console.log(
+            "Repayment transaction:",
+            tx.hash
+        );
+
+
         await tx.wait();
 
 
@@ -787,7 +1034,11 @@ async function repayLoan(
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Repay loan error:",
+            error
+        );
+
 
         alert(
             getErrorMessage(error)
@@ -852,6 +1103,12 @@ async function claimCollateral(
         );
 
 
+        console.log(
+            "Liquidation transaction:",
+            tx.hash
+        );
+
+
         await tx.wait();
 
 
@@ -869,7 +1126,11 @@ async function claimCollateral(
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Claim collateral error:",
+            error
+        );
+
 
         alert(
             getErrorMessage(error)
@@ -935,7 +1196,9 @@ async function loadLoans() {
             loan => {
 
                 const status =
-                    Number(loan.status);
+                    Number(
+                        loan.status
+                    );
 
 
                 const amount =
@@ -963,6 +1226,7 @@ async function loadLoans() {
                 let action = "";
 
 
+                // Requested
                 if (status === 0) {
 
                     if (
@@ -1001,6 +1265,7 @@ async function loadLoans() {
                 }
 
 
+                // Funded - Borrower can repay
                 if (
                     status === 1 &&
                     userAddress &&
@@ -1023,9 +1288,12 @@ async function loadLoans() {
                 }
 
 
+                // Funded - Lender can check default
                 if (
                     status === 1 &&
                     userAddress &&
+                    loan.lender !==
+                    ethers.ZeroAddress &&
                     loan.lender.toLowerCase() ===
                     userAddress.toLowerCase()
                 ) {
@@ -1183,17 +1451,17 @@ async function loadDashboard() {
             loan => {
 
                 const status =
-                    Number(loan.status);
+                    Number(
+                        loan.status
+                    );
 
 
                 if (status === 1) {
-
                     active++;
                 }
 
 
                 if (status === 2) {
-
                     completed++;
                 }
 
@@ -1208,29 +1476,53 @@ async function loadDashboard() {
         );
 
 
-        document.getElementById(
-            "totalLoans"
-        ).textContent =
-            loans.length;
+        const totalLoans =
+            document.getElementById(
+                "totalLoans"
+            );
+
+        if (totalLoans) {
+
+            totalLoans.textContent =
+                loans.length;
+        }
 
 
-        document.getElementById(
-            "activeLoans"
-        ).textContent =
-            active;
+        const activeLoans =
+            document.getElementById(
+                "activeLoans"
+            );
+
+        if (activeLoans) {
+
+            activeLoans.textContent =
+                active;
+        }
 
 
-        document.getElementById(
-            "completedLoans"
-        ).textContent =
-            completed;
+        const completedLoans =
+            document.getElementById(
+                "completedLoans"
+            );
+
+        if (completedLoans) {
+
+            completedLoans.textContent =
+                completed;
+        }
 
 
-        document.getElementById(
-            "totalVolume"
-        ).textContent =
-            totalVolume.toFixed(4) +
-            " ETH";
+        const totalVolumeElement =
+            document.getElementById(
+                "totalVolume"
+            );
+
+        if (totalVolumeElement) {
+
+            totalVolumeElement.textContent =
+                totalVolume.toFixed(4) +
+                " ETH";
+        }
 
 
     } catch (error) {
@@ -1254,7 +1546,9 @@ async function loadMyLoans() {
         if (
             !contract ||
             !userAddress
-        ) return;
+        ) {
+            return;
+        }
 
 
         const loans =
@@ -1267,25 +1561,39 @@ async function loadMyLoans() {
             );
 
 
+        if (!table) return;
+
+
         table.innerHTML = "";
 
 
         const myLoans =
             loans.filter(
-                loan =>
-                    loan.borrower.toLowerCase() ===
-                    userAddress.toLowerCase()
-                    ||
-                    (
+                loan => {
+
+                    const isBorrower =
+                        loan.borrower.toLowerCase() ===
+                        userAddress.toLowerCase();
+
+
+                    const isLender =
                         loan.lender !==
                         ethers.ZeroAddress &&
                         loan.lender.toLowerCase() ===
-                        userAddress.toLowerCase()
-                    )
+                        userAddress.toLowerCase();
+
+
+                    return (
+                        isBorrower ||
+                        isLender
+                    );
+                }
             );
 
 
-        if (myLoans.length === 0) {
+        if (
+            myLoans.length === 0
+        ) {
 
             table.innerHTML = `
 
@@ -1310,7 +1618,9 @@ async function loadMyLoans() {
             loan => {
 
                 const status =
-                    Number(loan.status);
+                    Number(
+                        loan.status
+                    );
 
 
                 const isBorrower =
@@ -1336,10 +1646,10 @@ async function loadMyLoans() {
                     );
 
 
-                let action =
-                    "-";
+                let action = "-";
 
 
+                // Borrower repay
                 if (
                     isBorrower &&
                     status === 1
@@ -1360,6 +1670,7 @@ async function loadMyLoans() {
                 }
 
 
+                // Lender default
                 if (
                     !isBorrower &&
                     status === 1
@@ -1511,8 +1822,11 @@ function formatDuration(
 
     if (days >= 1) {
 
-        return days + " Day" +
-            (days > 1 ? "s" : "");
+        return (
+            days +
+            " Day" +
+            (days > 1 ? "s" : "")
+        );
     }
 
 
@@ -1522,7 +1836,10 @@ function formatDuration(
         );
 
 
-    return hours + " Hours";
+    return (
+        hours +
+        " Hours"
+    );
 }
 
 
@@ -1533,6 +1850,21 @@ function formatDuration(
 function getErrorMessage(
     error
 ) {
+
+    console.error(
+        "Full error:",
+        error
+    );
+
+
+    if (
+        error.code ===
+        4001
+    ) {
+
+        return "Transaction rejected by user.";
+    }
+
 
     if (
         error.code ===
@@ -1560,6 +1892,16 @@ function getErrorMessage(
 
 
     if (
+        error.info &&
+        error.info.error &&
+        error.info.error.message
+    ) {
+
+        return error.info.error.message;
+    }
+
+
+    if (
         error.message
     ) {
 
@@ -1577,27 +1919,49 @@ function getErrorMessage(
 
 function updateLoanPreview() {
 
+    const loanElement =
+        document.getElementById(
+            "loanAmount"
+        );
+
+
+    const interestElement =
+        document.getElementById(
+            "interestRate"
+        );
+
+
+    const collateralElement =
+        document.getElementById(
+            "collateral"
+        );
+
+
+    if (
+        !loanElement ||
+        !interestElement ||
+        !collateralElement
+    ) {
+
+        return;
+    }
+
+
     const loanAmount =
         Number(
-            document.getElementById(
-                "loanAmount"
-            ).value
+            loanElement.value
         ) || 0;
 
 
     const interestRate =
         Number(
-            document.getElementById(
-                "interestRate"
-            ).value
+            interestElement.value
         ) || 0;
 
 
     const collateral =
         Number(
-            document.getElementById(
-                "collateral"
-            ).value
+            collateralElement.value
         ) || 0;
 
 
@@ -1607,30 +1971,51 @@ function updateLoanPreview() {
         100;
 
 
-    document.getElementById(
-        "previewLoan"
-    ).textContent =
-        loanAmount.toFixed(4) +
-        " ETH";
+    const previewLoan =
+        document.getElementById(
+            "previewLoan"
+        );
 
 
-    document.getElementById(
-        "previewCollateral"
-    ).textContent =
-        collateral.toFixed(4) +
-        " ETH";
+    if (previewLoan) {
+
+        previewLoan.textContent =
+            loanAmount.toFixed(4) +
+            " ETH";
+    }
 
 
-    document.getElementById(
-        "previewInterest"
-    ).textContent =
-        interest.toFixed(4) +
-        " ETH";
+    const previewCollateral =
+        document.getElementById(
+            "previewCollateral"
+        );
+
+
+    if (previewCollateral) {
+
+        previewCollateral.textContent =
+            collateral.toFixed(4) +
+            " ETH";
+    }
+
+
+    const previewInterest =
+        document.getElementById(
+            "previewInterest"
+        );
+
+
+    if (previewInterest) {
+
+        previewInterest.textContent =
+            interest.toFixed(4) +
+            " ETH";
+    }
 }
 
 
 // ==========================================
-// WALLET ACCOUNT CHANGE
+// METAMASK ACCOUNT CHANGE
 // ==========================================
 
 if (window.ethereum) {
@@ -1639,13 +2024,25 @@ if (window.ethereum) {
         "accountsChanged",
         async function (accounts) {
 
+            console.log(
+                "Accounts changed:",
+                accounts
+            );
+
+
             if (
                 accounts.length === 0
             ) {
 
                 userAddress = null;
 
-                location.reload();
+                provider = null;
+
+                signer = null;
+
+                contract = null;
+
+                updateWalletButton();
 
             } else {
 
@@ -1657,25 +2054,37 @@ if (window.ethereum) {
 
     window.ethereum.on(
         "chainChanged",
-        function () {
+        function (chainId) {
 
+            console.log(
+                "Chain changed:",
+                chainId
+            );
+
+            // Reload so the correct provider
+            // and contract are created again
             location.reload();
-
         }
     );
 }
 
 
 // ==========================================
-// EVENT LISTENERS
+// PAGE EVENT LISTENERS
 // ==========================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        console.log(
+            "P2P Lending DApp loaded."
+        );
 
-        // Connect wallet
+
+        // --------------------------------------
+        // CONNECT WALLET BUTTON
+        // --------------------------------------
 
         const connectButton =
             document.getElementById(
@@ -1685,14 +2094,27 @@ document.addEventListener(
 
         if (connectButton) {
 
+            console.log(
+                "Connect Wallet button found."
+            );
+
+
             connectButton.addEventListener(
                 "click",
                 connectWallet
             );
+
+        } else {
+
+            console.error(
+                "ERROR: #connectWallet button not found."
+            );
         }
 
 
-        // Loan form
+        // --------------------------------------
+        // LOAN FORM
+        // --------------------------------------
 
         const loanForm =
             document.getElementById(
@@ -1709,7 +2131,9 @@ document.addEventListener(
         }
 
 
-        // Preview inputs
+        // --------------------------------------
+        // PREVIEW INPUTS
+        // --------------------------------------
 
         const inputs = [
 
@@ -1742,7 +2166,9 @@ document.addEventListener(
         );
 
 
-        // Refresh
+        // --------------------------------------
+        // REFRESH LOANS
+        // --------------------------------------
 
         const refresh =
             document.getElementById(
@@ -1755,6 +2181,16 @@ document.addEventListener(
             refresh.addEventListener(
                 "click",
                 async function () {
+
+                    if (!contract) {
+
+                        alert(
+                            "Please connect your wallet first."
+                        );
+
+                        return;
+                    }
+
 
                     await loadLoans();
 
