@@ -23,7 +23,7 @@ let currentChainId = null;
 // on the SAME network currently selected in MetaMask.
 
 const CONTRACT_ADDRESS =
-    "0xad47ce33CE62AB6f373b4309F65F4247ef80f302";
+    "0xbc487141eD9b41F13362564aabA408bfD640981A";
 
 
 // ============================================================
