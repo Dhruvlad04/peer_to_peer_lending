@@ -12,7 +12,7 @@ let userAddress;
 // CONTRACT CONFIGURATION
 // ==========================================
 
-const CONTRACT_ADDRESS = "0xad47ce33CE62AB6f373b4309F65F4247ef80f302";
+const CONTRACT_ADDRESS = "0xE1Ad80cE4A25e81af16F75532F71439a905C6751";
 
 const CONTRACT_ABI = [
     {
