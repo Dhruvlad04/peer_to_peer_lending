@@ -1,34 +1,18 @@
-// ============================================================
+// ==========================================
 // P2P LENDING DAPP - APP.JS
-// Ethers.js v6
-// ============================================================
+// ==========================================
 
-// ============================================================
-// GLOBAL VARIABLES
-// ============================================================
-
-let provider = null;
-let signer = null;
-let contract = null;
-let userAddress = null;
-let currentChainId = null;
+let provider;
+let signer;
+let contract;
+let userAddress;
 
 
-// ============================================================
+// ==========================================
 // CONTRACT CONFIGURATION
-// ============================================================
+// ==========================================
 
-// IMPORTANT:
-// This address MUST be the address of the contract deployed
-// on the SAME network currently selected in MetaMask.
-
-const CONTRACT_ADDRESS =
-    "0xbc487141eD9b41F13362564aabA408bfD640981A";
-
-
-// ============================================================
-// CONTRACT ABI
-// ============================================================
+const CONTRACT_ADDRESS = "0xad47ce33CE62AB6f373b4309F65F4247ef80f302";
 
 const CONTRACT_ABI = [
     {
@@ -500,166 +484,16 @@ const CONTRACT_ABI = [
         "stateMutability": "view",
         "type": "function"
     }
-];
+]
 
 
-// ============================================================
-// STATUS
-// ============================================================
-
-const STATUS = {
-    0: "Requested",
-    1: "Funded",
-    2: "Repaid",
-    3: "Defaulted"
-};
-
-
-// ============================================================
-// CONNECT WALLET
-// ============================================================
-
-async function connectWallet() {
-    try {
-        if (!window.ethereum) {
-            alert("Please install MetaMask.");
-            return;
-        }
-
-        // Switch MetaMask to Sepolia
-        await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [
-                {
-                    chainId: "0xaa36a7"
-                }
-            ]
-        });
-
-        // Connect wallet
-        await window.ethereum.request({
-            method: "eth_requestAccounts"
-        });
-
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-
-        account = await signer.getAddress();
-
-        console.log("Wallet connected:", account);
-
-        const network = await provider.getNetwork();
-
-        console.log(
-            "Network:",
-            network.name
-        );
-
-        console.log(
-            "Chain ID:",
-            network.chainId.toString()
-        );
-
-        // Make sure we are on Sepolia
-        if (network.chainId !== 11155111n) {
-            alert("Please switch MetaMask to Sepolia.");
-            return;
-        }
-
-        console.log(
-            "Contract:",
-            CONTRACT_ADDRESS
-        );
-
-        // Check contract
-        const code = await provider.getCode(
-            CONTRACT_ADDRESS
-        );
-
-        console.log(
-            "Contract bytecode:",
-            code
-        );
-
-        if (code === "0x") {
-            alert(
-                "SMART CONTRACT NOT FOUND\n\n" +
-                "Contract:\n" +
-                CONTRACT_ADDRESS +
-                "\n\n" +
-                "Network:\n" +
-                network.name +
-                "\n\n" +
-                "Chain ID:\n" +
-                network.chainId.toString()
-            );
-            return;
-        }
-
-        contract = new ethers.Contract(
-            CONTRACT_ADDRESS,
-            CONTRACT_ABI,
-            signer
-        );
-
-        console.log(
-            "Contract connected successfully."
-        );
-
-        // Continue with your existing UI/load functions here
-
-    } catch (error) {
-        console.error(
-            "Wallet connection error:",
-            error
-        );
-
-        alert(
-            error.message ||
-            "Failed to connect wallet."
-        );
-    }
-}
-
-// ============================================================
-// UPDATE WALLET BUTTON
-// ============================================================
-
-function updateWalletButton() {
-
-    const button =
-        document.getElementById(
-            "connectWallet"
-        );
-
-
-    if (!button || !userAddress) {
-        return;
-    }
-
-
-    button.textContent =
-        userAddress.substring(0, 6) +
-        "..." +
-        userAddress.substring(
-            userAddress.length - 4
-        );
-
-
-    button.classList.add(
-        "connected"
-    );
-}
-
-
-// ============================================================
+// ==========================================
 // REQUEST LOAN
-// ============================================================
+// ==========================================
 
 async function requestLoan(event) {
 
     event.preventDefault();
-
 
     try {
 
@@ -672,79 +506,31 @@ async function requestLoan(event) {
             return;
         }
 
-
-        // ====================================================
-        // GET FORM VALUES
-        // ====================================================
-
-        const loanAmountInput =
+        const loanAmount =
             document.getElementById(
                 "loanAmount"
-            );
-
-
-        const interestRateInput =
-            document.getElementById(
-                "interestRate"
-            );
-
-
-        const durationInput =
-            document.getElementById(
-                "duration"
-            );
-
-
-        const collateralInput =
-            document.getElementById(
-                "collateral"
-            );
-
-
-        if (
-            !loanAmountInput ||
-            !interestRateInput ||
-            !durationInput ||
-            !collateralInput
-        ) {
-
-            alert(
-                "Form fields are missing.\n\n" +
-                "Check your HTML IDs:\n" +
-                "loanAmount\n" +
-                "interestRate\n" +
-                "duration\n" +
-                "collateral"
-            );
-
-            return;
-        }
-
-
-        const loanAmount =
-            loanAmountInput.value.trim();
-
+            ).value;
 
         const interestRate =
-            interestRateInput.value.trim();
+            document.getElementById(
+                "interestRate"
+            ).value;
 
-
-        const durationRaw =
-            durationInput.value.trim();
-
+        const duration =
+            document.getElementById(
+                "duration"
+            ).value;
 
         const collateral =
-            collateralInput.value.trim();
+            document.getElementById(
+                "collateral"
+            ).value;
 
-
-        // ====================================================
-        // VALIDATION
-        // ====================================================
 
         if (
             !loanAmount ||
             !interestRate ||
-            !durationRaw ||
+            !duration ||
             !collateral
         ) {
 
@@ -757,39 +543,6 @@ async function requestLoan(event) {
 
 
         if (
-            !Number.isFinite(
-                Number(loanAmount)
-            ) ||
-            Number(loanAmount) <= 0
-        ) {
-
-            alert(
-                "Loan amount must be greater than zero."
-            );
-
-            return;
-        }
-
-
-        if (
-            !Number.isFinite(
-                Number(interestRate)
-            ) ||
-            Number(interestRate) <= 0
-        ) {
-
-            alert(
-                "Interest rate must be greater than zero."
-            );
-
-            return;
-        }
-
-
-        if (
-            !Number.isFinite(
-                Number(collateral)
-            ) ||
             Number(collateral) <= 0
         ) {
 
@@ -800,55 +553,6 @@ async function requestLoan(event) {
             return;
         }
 
-
-        // ====================================================
-        // DURATION
-        // ====================================================
-
-        const duration =
-            normalizeDuration(
-                durationRaw
-            );
-
-
-        if (duration <= 0) {
-
-            alert(
-                "Invalid loan duration."
-            );
-
-            return;
-        }
-
-
-        console.log(
-            "Loan amount:",
-            loanAmount,
-            "ETH"
-        );
-
-        console.log(
-            "Interest:",
-            interestRate,
-            "%"
-        );
-
-        console.log(
-            "Duration:",
-            duration,
-            "seconds"
-        );
-
-        console.log(
-            "Collateral:",
-            collateral,
-            "ETH"
-        );
-
-
-        // ====================================================
-        // CONVERT ETH TO WEI
-        // ====================================================
 
         const loanAmountWei =
             ethers.parseEther(
@@ -862,107 +566,15 @@ async function requestLoan(event) {
             );
 
 
-        // ====================================================
-        // CHECK WALLET BALANCE
-        // ====================================================
-
-        const balance =
-            await provider.getBalance(
-                userAddress
-            );
-
-
-        const gasBuffer =
-            ethers.parseEther(
-                "0.001"
-            );
-
-
-        if (
-            balance <
-            collateralWei + gasBuffer
-        ) {
-
-            alert(
-                "Insufficient ETH balance.\n\n" +
-
-                "Required collateral:\n" +
-                collateral +
-                " ETH\n\n" +
-
-                "You also need ETH for gas."
-            );
-
-            return;
-        }
-
-
-        // ====================================================
-        // BUTTON
-        // ====================================================
-
         const button =
             event.target.querySelector(
                 "button[type='submit']"
             );
 
+        button.disabled = true;
 
-        if (button) {
-
-            button.disabled = true;
-
-            button.textContent =
-                "Checking transaction...";
-        }
-
-
-        // ====================================================
-        // ESTIMATE GAS
-        // ====================================================
-
-        let gasLimit;
-
-
-        try {
-
-            gasLimit =
-                await contract.requestLoan.estimateGas(
-                    loanAmountWei,
-                    interestRate,
-                    duration,
-                    {
-                        value: collateralWei
-                    }
-                );
-
-
-            console.log(
-                "Estimated gas:",
-                gasLimit.toString()
-            );
-
-
-        } catch (estimateError) {
-
-            console.error(
-                "Gas estimation failed:",
-                estimateError
-            );
-
-
-            throw estimateError;
-        }
-
-
-        // ====================================================
-        // SEND TRANSACTION
-        // ====================================================
-
-        if (button) {
-
-            button.textContent =
-                "Waiting for MetaMask...";
-        }
+        button.textContent =
+            "Creating Loan...";
 
 
         const tx =
@@ -971,54 +583,28 @@ async function requestLoan(event) {
                 interestRate,
                 duration,
                 {
-                    value: collateralWei,
-                    gasLimit:
-                        gasLimit +
-                        (gasLimit / 5n)
+                    value: collateralWei
                 }
             );
 
 
         console.log(
-            "Transaction hash:",
+            "Transaction:",
             tx.hash
         );
 
 
-        if (button) {
-
-            button.textContent =
-                "Transaction pending...";
-        }
-
-
-        // Wait for blockchain confirmation
-        const receipt =
-            await tx.wait();
-
-
-        console.log(
-            "Transaction confirmed:",
-            receipt
-        );
+        await tx.wait();
 
 
         alert(
-            "Loan request created successfully!\n\n" +
-            "Transaction:\n" +
-            tx.hash
+            "Loan request created successfully!"
         );
 
 
-        // Reset form
         event.target.reset();
 
 
-        // Update preview
-        updateLoanPreview();
-
-
-        // Refresh data
         await loadLoans();
 
         await loadDashboard();
@@ -1028,17 +614,11 @@ async function requestLoan(event) {
 
     } catch (error) {
 
-        console.error(
-            "REQUEST LOAN ERROR:",
-            error
-        );
-
+        console.error(error);
 
         alert(
-            "Loan request failed.\n\n" +
             getErrorMessage(error)
         );
-
 
     } finally {
 
@@ -1046,7 +626,6 @@ async function requestLoan(event) {
             event.target.querySelector(
                 "button[type='submit']"
             );
-
 
         if (button) {
 
@@ -1059,9 +638,9 @@ async function requestLoan(event) {
 }
 
 
-// ============================================================
+// ==========================================
 // FUND LOAN
-// ============================================================
+// ==========================================
 
 async function fundLoan(
     loanId,
@@ -1080,92 +659,18 @@ async function fundLoan(
         }
 
 
-        loanId =
-            normalizeLoanId(
-                loanId
-            );
-
-
-        const loan =
-            await contract.getLoan(
-                loanId
-            );
-
-
-        if (
-            Number(loan.status) !== 0
-        ) {
-
-            alert(
-                "This loan is no longer available for funding."
-            );
-
-            return;
-        }
-
-
-        if (
-            loan.borrower.toLowerCase() ===
-            userAddress.toLowerCase()
-        ) {
-
-            alert(
-                "You cannot fund your own loan."
-            );
-
-            return;
-        }
-
-
-        const actualAmount =
-            ethers.formatEther(
-                loan.loanAmount
-            );
-
-
         const confirmed =
             confirm(
-                `Fund Loan #${loanId} with ${actualAmount} ETH?`
+                `Fund Loan #${loanId} with ${amount} ETH?`
             );
 
 
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
 
 
         const amountWei =
             ethers.parseEther(
-                actualAmount
-            );
-
-
-        // Check balance
-        const balance =
-            await provider.getBalance(
-                userAddress
-            );
-
-
-        if (
-            balance < amountWei
-        ) {
-
-            alert(
-                "Insufficient ETH balance to fund this loan."
-            );
-
-            return;
-        }
-
-
-        // Estimate gas
-        const gasLimit =
-            await contract.fundLoan.estimateGas(
-                loanId,
-                {
-                    value: amountWei
-                }
+                amount
             );
 
 
@@ -1173,17 +678,13 @@ async function fundLoan(
             await contract.fundLoan(
                 loanId,
                 {
-                    value: amountWei,
-                    gasLimit:
-                        gasLimit +
-                        (gasLimit / 5n)
+                    value: amountWei
                 }
             );
 
 
         alert(
-            "Funding transaction submitted.\n\n" +
-            tx.hash
+            "Funding transaction submitted."
         );
 
 
@@ -1204,23 +705,18 @@ async function fundLoan(
 
     } catch (error) {
 
-        console.error(
-            "FUND LOAN ERROR:",
-            error
-        );
-
+        console.error(error);
 
         alert(
-            "Funding failed.\n\n" +
             getErrorMessage(error)
         );
     }
 }
 
 
-// ============================================================
+// ==========================================
 // REPAY LOAN
-// ============================================================
+// ==========================================
 
 async function repayLoan(
     loanId
@@ -1238,47 +734,6 @@ async function repayLoan(
         }
 
 
-        loanId =
-            normalizeLoanId(
-                loanId
-            );
-
-
-        // Get loan
-        const loan =
-            await contract.getLoan(
-                loanId
-            );
-
-
-        // Check borrower
-        if (
-            loan.borrower.toLowerCase() !==
-            userAddress.toLowerCase()
-        ) {
-
-            alert(
-                "Only the borrower can repay this loan."
-            );
-
-            return;
-        }
-
-
-        // Check status
-        if (
-            Number(loan.status) !== 1
-        ) {
-
-            alert(
-                "This loan is not currently active."
-            );
-
-            return;
-        }
-
-
-        // Get repayment
         const repayment =
             await contract.getRepaymentAmount(
                 loanId
@@ -1298,33 +753,11 @@ async function repayLoan(
             );
 
 
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
 
 
-        // Check balance
-        const balance =
-            await provider.getBalance(
-                userAddress
-            );
-
-
-        if (
-            balance < repayment
-        ) {
-
-            alert(
-                "Insufficient ETH balance for repayment and gas."
-            );
-
-            return;
-        }
-
-
-        // Estimate gas
-        const gasLimit =
-            await contract.repayLoan.estimateGas(
+        const tx =
+            await contract.repayLoan(
                 loanId,
                 {
                     value: repayment
@@ -1332,21 +765,8 @@ async function repayLoan(
             );
 
 
-        const tx =
-            await contract.repayLoan(
-                loanId,
-                {
-                    value: repayment,
-                    gasLimit:
-                        gasLimit +
-                        (gasLimit / 5n)
-                }
-            );
-
-
         alert(
-            "Repayment transaction submitted.\n\n" +
-            tx.hash
+            "Repayment transaction submitted."
         );
 
 
@@ -1367,23 +787,18 @@ async function repayLoan(
 
     } catch (error) {
 
-        console.error(
-            "REPAY LOAN ERROR:",
-            error
-        );
-
+        console.error(error);
 
         alert(
-            "Repayment failed.\n\n" +
             getErrorMessage(error)
         );
     }
 }
 
 
-// ============================================================
+// ==========================================
 // CLAIM COLLATERAL
-// ============================================================
+// ==========================================
 
 async function claimCollateral(
     loanId
@@ -1401,44 +816,6 @@ async function claimCollateral(
         }
 
 
-        loanId =
-            normalizeLoanId(
-                loanId
-            );
-
-
-        const loan =
-            await contract.getLoan(
-                loanId
-            );
-
-
-        if (
-            Number(loan.status) !== 1
-        ) {
-
-            alert(
-                "This loan is not active."
-            );
-
-            return;
-        }
-
-
-        if (
-            loan.lender.toLowerCase() !==
-            userAddress.toLowerCase()
-        ) {
-
-            alert(
-                "Only the lender can claim the collateral."
-            );
-
-            return;
-        }
-
-
-        // Check overdue
         const overdue =
             await contract.isOverdue(
                 loanId
@@ -1447,78 +824,31 @@ async function claimCollateral(
 
         if (!overdue) {
 
-            const fundedAt =
-                Number(
-                    loan.fundedAt
-                );
-
-
-            const duration =
-                Number(
-                    loan.duration
-                );
-
-
-            const deadline =
-                fundedAt +
-                duration;
-
-
-            const deadlineDate =
-                new Date(
-                    deadline * 1000
-                );
-
-
             alert(
-                "This loan is not overdue yet.\n\n" +
-                "Loan deadline:\n" +
-                deadlineDate.toLocaleString()
+                "This loan is not overdue yet."
             );
 
             return;
         }
-
-
-        const collateral =
-            ethers.formatEther(
-                loan.collateralAmount
-            );
 
 
         const confirmed =
             confirm(
-                `Loan #${loanId} is overdue.\n\n` +
-                `Claim ${collateral} ETH collateral?`
+                `Claim collateral for Loan #${loanId}?`
             );
 
 
-        if (!confirmed) {
-            return;
-        }
-
-
-        // Estimate gas
-        const gasLimit =
-            await contract.claimCollateral.estimateGas(
-                loanId
-            );
+        if (!confirmed) return;
 
 
         const tx =
             await contract.claimCollateral(
-                loanId,
-                {
-                    gasLimit:
-                        gasLimit +
-                        (gasLimit / 5n)
-                }
+                loanId
             );
 
 
         alert(
-            "Liquidation transaction submitted.\n\n" +
-            tx.hash
+            "Liquidation transaction submitted."
         );
 
 
@@ -1539,31 +869,24 @@ async function claimCollateral(
 
     } catch (error) {
 
-        console.error(
-            "CLAIM COLLATERAL ERROR:",
-            error
-        );
-
+        console.error(error);
 
         alert(
-            "Collateral claim failed.\n\n" +
             getErrorMessage(error)
         );
     }
 }
 
 
-// ============================================================
+// ==========================================
 // LOAD ALL LOANS
-// ============================================================
+// ==========================================
 
 async function loadLoans() {
 
     try {
 
-        if (!contract) {
-            return;
-        }
+        if (!contract) return;
 
 
         const loans =
@@ -1576,9 +899,7 @@ async function loadLoans() {
             );
 
 
-        if (!loanList) {
-            return;
-        }
+        if (!loanList) return;
 
 
         loanList.innerHTML = "";
@@ -1614,9 +935,7 @@ async function loadLoans() {
             loan => {
 
                 const status =
-                    Number(
-                        loan.status
-                    );
+                    Number(loan.status);
 
 
                 const amount =
@@ -1629,10 +948,6 @@ async function loadLoans() {
                     ethers.formatEther(
                         loan.collateralAmount
                     );
-
-
-                const loanId =
-                    loan.id.toString();
 
 
                 const card =
@@ -1648,13 +963,7 @@ async function loadLoans() {
                 let action = "";
 
 
-                // ====================================================
-                // REQUESTED
-                // ====================================================
-
-                if (
-                    status === 0
-                ) {
+                if (status === 0) {
 
                     if (
                         userAddress &&
@@ -1680,7 +989,7 @@ async function loadLoans() {
                             <button
                                 class="primary-btn loan-action"
                                 onclick="fundLoan(
-                                    '${loanId}',
+                                    ${loan.id},
                                     '${amount}'
                                 )"
                             >
@@ -1691,10 +1000,6 @@ async function loadLoans() {
                     }
                 }
 
-
-                // ====================================================
-                // FUNDED - BORROWER
-                // ====================================================
 
                 if (
                     status === 1 &&
@@ -1708,7 +1013,7 @@ async function loadLoans() {
                         <button
                             class="primary-btn loan-action"
                             onclick="repayLoan(
-                                '${loanId}'
+                                ${loan.id}
                             )"
                         >
                             Repay Loan
@@ -1717,10 +1022,6 @@ async function loadLoans() {
                     `;
                 }
 
-
-                // ====================================================
-                // FUNDED - LENDER
-                // ====================================================
 
                 if (
                     status === 1 &&
@@ -1734,7 +1035,7 @@ async function loadLoans() {
                         <button
                             class="secondary-btn loan-action"
                             onclick="claimCollateral(
-                                '${loanId}'
+                                ${loan.id}
                             )"
                         >
                             Check Default
@@ -1744,20 +1045,16 @@ async function loadLoans() {
                 }
 
 
-                // ====================================================
-                // CARD HTML
-                // ====================================================
-
                 card.innerHTML = `
 
                     <div class="loan-header">
 
                         <span class="loan-id">
-                            Loan #${loanId}
+                            Loan #${loan.id}
                         </span>
 
                         <span class="status ${getStatusClass(status)}">
-                            ${STATUS[status] || "Unknown"}
+                            ${STATUS[status]}
                         </span>
 
                     </div>
@@ -1790,7 +1087,7 @@ async function loadLoans() {
                             </span>
 
                             <strong>
-                                ${loan.interestRate.toString()}%
+                                ${loan.interestRate}%
                             </strong>
 
                         </div>
@@ -1820,7 +1117,7 @@ async function loadLoans() {
                             </span>
 
                             <strong>
-                                #${loanId}
+                                #${loan.id}
                             </strong>
 
                         </div>
@@ -1856,47 +1153,19 @@ async function loadLoans() {
             "Loading loans failed:",
             error
         );
-
-
-        const loanList =
-            document.getElementById(
-                "loanList"
-            );
-
-
-        if (loanList) {
-
-            loanList.innerHTML = `
-
-                <div class="empty-state">
-
-                    <h3>
-                        Unable to load loans
-                    </h3>
-
-                    <p>
-                        Check MetaMask network and contract address.
-                    </p>
-
-                </div>
-
-            `;
-        }
     }
 }
 
 
-// ============================================================
+// ==========================================
 // LOAD DASHBOARD
-// ============================================================
+// ==========================================
 
 async function loadDashboard() {
 
     try {
 
-        if (!contract) {
-            return;
-        }
+        if (!contract) return;
 
 
         const loans =
@@ -1914,22 +1183,16 @@ async function loadDashboard() {
             loan => {
 
                 const status =
-                    Number(
-                        loan.status
-                    );
+                    Number(loan.status);
 
 
-                if (
-                    status === 1
-                ) {
+                if (status === 1) {
 
                     active++;
                 }
 
 
-                if (
-                    status === 2
-                ) {
+                if (status === 2) {
 
                     completed++;
                 }
@@ -1945,57 +1208,29 @@ async function loadDashboard() {
         );
 
 
-        const totalLoansElement =
-            document.getElementById(
-                "totalLoans"
-            );
+        document.getElementById(
+            "totalLoans"
+        ).textContent =
+            loans.length;
 
 
-        const activeLoansElement =
-            document.getElementById(
-                "activeLoans"
-            );
+        document.getElementById(
+            "activeLoans"
+        ).textContent =
+            active;
 
 
-        const completedLoansElement =
-            document.getElementById(
-                "completedLoans"
-            );
+        document.getElementById(
+            "completedLoans"
+        ).textContent =
+            completed;
 
 
-        const totalVolumeElement =
-            document.getElementById(
-                "totalVolume"
-            );
-
-
-        if (totalLoansElement) {
-
-            totalLoansElement.textContent =
-                loans.length;
-        }
-
-
-        if (activeLoansElement) {
-
-            activeLoansElement.textContent =
-                active;
-        }
-
-
-        if (completedLoansElement) {
-
-            completedLoansElement.textContent =
-                completed;
-        }
-
-
-        if (totalVolumeElement) {
-
-            totalVolumeElement.textContent =
-                totalVolume.toFixed(4) +
-                " ETH";
-        }
+        document.getElementById(
+            "totalVolume"
+        ).textContent =
+            totalVolume.toFixed(4) +
+            " ETH";
 
 
     } catch (error) {
@@ -2008,9 +1243,9 @@ async function loadDashboard() {
 }
 
 
-// ============================================================
+// ==========================================
 // LOAD MY LOANS
-// ============================================================
+// ==========================================
 
 async function loadMyLoans() {
 
@@ -2019,10 +1254,7 @@ async function loadMyLoans() {
         if (
             !contract ||
             !userAddress
-        ) {
-
-            return;
-        }
+        ) return;
 
 
         const loans =
@@ -2035,43 +1267,25 @@ async function loadMyLoans() {
             );
 
 
-        if (!table) {
-            return;
-        }
-
-
         table.innerHTML = "";
 
 
         const myLoans =
             loans.filter(
-                loan => {
-
-                    const isBorrower =
-                        loan.borrower &&
-                        loan.borrower.toLowerCase() ===
-                        userAddress.toLowerCase();
-
-
-                    const isLender =
-                        loan.lender &&
+                loan =>
+                    loan.borrower.toLowerCase() ===
+                    userAddress.toLowerCase()
+                    ||
+                    (
                         loan.lender !==
                         ethers.ZeroAddress &&
                         loan.lender.toLowerCase() ===
-                        userAddress.toLowerCase();
-
-
-                    return (
-                        isBorrower ||
-                        isLender
-                    );
-                }
+                        userAddress.toLowerCase()
+                    )
             );
 
 
-        if (
-            myLoans.length === 0
-        ) {
+        if (myLoans.length === 0) {
 
             table.innerHTML = `
 
@@ -2096,9 +1310,7 @@ async function loadMyLoans() {
             loan => {
 
                 const status =
-                    Number(
-                        loan.status
-                    );
+                    Number(loan.status);
 
 
                 const isBorrower =
@@ -2124,15 +1336,10 @@ async function loadMyLoans() {
                     );
 
 
-                const loanId =
-                    loan.id.toString();
-
-
                 let action =
                     "-";
 
 
-                // Borrower repay
                 if (
                     isBorrower &&
                     status === 1
@@ -2143,7 +1350,7 @@ async function loadMyLoans() {
                         <button
                             class="primary-btn"
                             onclick="repayLoan(
-                                '${loanId}'
+                                ${loan.id}
                             )"
                         >
                             Repay
@@ -2153,7 +1360,6 @@ async function loadMyLoans() {
                 }
 
 
-                // Lender default
                 if (
                     !isBorrower &&
                     status === 1
@@ -2164,7 +1370,7 @@ async function loadMyLoans() {
                         <button
                             class="secondary-btn"
                             onclick="claimCollateral(
-                                '${loanId}'
+                                ${loan.id}
                             )"
                         >
                             Default
@@ -2183,7 +1389,7 @@ async function loadMyLoans() {
                 row.innerHTML = `
 
                     <td>
-                        #${loanId}
+                        #${loan.id}
                     </td>
 
                     <td>
@@ -2199,7 +1405,7 @@ async function loadMyLoans() {
                     </td>
 
                     <td>
-                        ${loan.interestRate.toString()}%
+                        ${loan.interestRate}%
                     </td>
 
                     <td>
@@ -2207,7 +1413,7 @@ async function loadMyLoans() {
                         <span class="status
                             ${getStatusClass(status)}">
 
-                            ${STATUS[status] || "Unknown"}
+                            ${STATUS[status]}
 
                         </span>
 
@@ -2237,108 +1443,15 @@ async function loadMyLoans() {
 }
 
 
-// ============================================================
-// NORMALIZE LOAN ID
-// ============================================================
-
-function normalizeLoanId(
-    loanId
-) {
-
-    const id =
-        Number(
-            loanId
-        );
-
-
-    if (
-        !Number.isInteger(id) ||
-        id <= 0
-    ) {
-
-        throw new Error(
-            "Invalid loan ID."
-        );
-    }
-
-
-    return id;
-}
-
-
-// ============================================================
-// NORMALIZE DURATION
-// ============================================================
-//
-// Solidity expects duration in SECONDS.
-//
-// If your HTML uses:
-// value="604800"
-// this function keeps it as seconds.
-//
-// If your HTML uses:
-// value="7"
-// for "7 Days",
-// this function converts it to:
-// 7 * 86400 = 604800 seconds.
-//
-
-function normalizeDuration(
-    value
-) {
-
-    const number =
-        Number(
-            value
-        );
-
-
-    if (
-        !Number.isFinite(number) ||
-        number <= 0
-    ) {
-
-        return 0;
-    }
-
-
-    // If duration is small, assume the HTML
-    // is providing DAYS.
-    //
-    // Example:
-    // 7  -> 604800 seconds
-    // 14 -> 1209600 seconds
-    // 30 -> 2592000 seconds
-
-    if (
-        number <= 365
-    ) {
-
-        return Math.floor(
-            number * 86400
-        );
-    }
-
-
-    // Otherwise assume it is already seconds.
-
-    return Math.floor(
-        number
-    );
-}
-
-
-// ============================================================
+// ==========================================
 // STATUS CSS CLASS
-// ============================================================
+// ==========================================
 
 function getStatusClass(
     status
 ) {
 
-    switch (
-    Number(status)
-    ) {
+    switch (status) {
 
         case 0:
             return "requested";
@@ -2358,9 +1471,9 @@ function getStatusClass(
 }
 
 
-// ============================================================
+// ==========================================
 // SHORT ADDRESS
-// ============================================================
+// ==========================================
 
 function shortAddress(
     address
@@ -2373,10 +1486,7 @@ function shortAddress(
 
 
     return (
-        address.substring(
-            0,
-            6
-        ) +
+        address.substring(0, 6) +
         "..." +
         address.substring(
             address.length - 4
@@ -2385,28 +1495,13 @@ function shortAddress(
 }
 
 
-// ============================================================
+// ==========================================
 // FORMAT DURATION
-// ============================================================
+// ==========================================
 
 function formatDuration(
     seconds
 ) {
-
-    seconds =
-        Number(
-            seconds
-        );
-
-
-    if (
-        !Number.isFinite(seconds) ||
-        seconds <= 0
-    ) {
-
-        return "N/A";
-    }
-
 
     const days =
         Math.floor(
@@ -2414,15 +1509,10 @@ function formatDuration(
         );
 
 
-    if (
-        days >= 1
-    ) {
+    if (days >= 1) {
 
-        return (
-            days +
-            " Day" +
-            (days > 1 ? "s" : "")
-        );
+        return days + " Day" +
+            (days > 1 ? "s" : "");
     }
 
 
@@ -2432,226 +1522,82 @@ function formatDuration(
         );
 
 
-    if (
-        hours >= 1
-    ) {
-
-        return (
-            hours +
-            " Hour" +
-            (hours > 1 ? "s" : "")
-        );
-    }
-
-
-    const minutes =
-        Math.floor(
-            seconds / 60
-        );
-
-
-    if (
-        minutes >= 1
-    ) {
-
-        return (
-            minutes +
-            " Minute" +
-            (minutes > 1 ? "s" : "")
-        );
-    }
-
-
-    return (
-        seconds +
-        " Seconds"
-    );
+    return hours + " Hours";
 }
 
 
-// ============================================================
+// ==========================================
 // ERROR HANDLER
-// ============================================================
+// ==========================================
 
 function getErrorMessage(
     error
 ) {
 
-    console.error(
-        "FULL BLOCKCHAIN ERROR:",
-        error
-    );
-
-
-    // User rejected MetaMask
     if (
-        error?.code ===
+        error.code ===
         "ACTION_REJECTED"
     ) {
 
-        return (
-            "Transaction rejected by user."
-        );
+        return "Transaction rejected by user.";
     }
 
 
     if (
-        error?.code ===
-        4001
+        error.reason
     ) {
 
-        return (
-            "Transaction rejected by user."
-        );
-    }
-
-
-    // Solidity revert reason
-    if (
-        error?.reason
-    ) {
-
-        return (
-            "Smart contract rejected the transaction:\n" +
-            error.reason
-        );
-    }
-
-
-    // Ethers short message
-    if (
-        error?.shortMessage
-    ) {
-
-        return (
-            error.shortMessage
-        );
-    }
-
-
-    // Nested provider error
-    if (
-        error?.info?.error?.message
-    ) {
-
-        return (
-            error.info.error.message
-        );
-    }
-
-
-    // Nested revert data
-    if (
-        error?.data?.message
-    ) {
-
-        return (
-            error.data.message
-        );
+        return error.reason;
     }
 
 
     if (
-        error?.error?.message
+        error.shortMessage
     ) {
 
-        return (
-            error.error.message
-        );
-    }
-
-
-    // Common "missing revert data" case
-    if (
-        error?.message?.includes(
-            "missing revert data"
-        )
-    ) {
-
-        return (
-            "The blockchain node returned no revert reason.\n\n" +
-
-            "Most common causes:\n" +
-            "1. Wrong MetaMask network\n" +
-            "2. Wrong contract address\n" +
-            "3. ABI does not match deployed contract\n" +
-            "4. Contract call is reverting\n\n" +
-
-            "Open F12 → Console and check:\n" +
-            "Contract bytecode\n" +
-            "Chain ID\n" +
-            "Contract address"
-        );
+        return error.shortMessage;
     }
 
 
     if (
-        error?.message
+        error.message
     ) {
 
-        return (
-            error.message
-        );
+        return error.message;
     }
 
 
-    return (
-        "Transaction failed.\n\n" +
-        "Check MetaMask network, contract address, " +
-        "wallet balance and contract ABI."
-    );
+    return "Transaction failed.";
 }
 
 
-// ============================================================
+// ==========================================
 // LIVE LOAN PREVIEW
-// ============================================================
+// ==========================================
 
 function updateLoanPreview() {
 
-    const loanElement =
-        document.getElementById(
-            "loanAmount"
-        );
-
-
-    const interestElement =
-        document.getElementById(
-            "interestRate"
-        );
-
-
-    const collateralElement =
-        document.getElementById(
-            "collateral"
-        );
-
-
-    if (
-        !loanElement ||
-        !interestElement ||
-        !collateralElement
-    ) {
-
-        return;
-    }
-
-
     const loanAmount =
         Number(
-            loanElement.value
+            document.getElementById(
+                "loanAmount"
+            ).value
         ) || 0;
 
 
     const interestRate =
         Number(
-            interestElement.value
+            document.getElementById(
+                "interestRate"
+            ).value
         ) || 0;
 
 
     const collateral =
         Number(
-            collateralElement.value
+            document.getElementById(
+                "collateral"
+            ).value
         ) || 0;
 
 
@@ -2661,79 +1607,43 @@ function updateLoanPreview() {
         100;
 
 
-    const previewLoan =
-        document.getElementById(
-            "previewLoan"
-        );
+    document.getElementById(
+        "previewLoan"
+    ).textContent =
+        loanAmount.toFixed(4) +
+        " ETH";
 
 
-    const previewCollateral =
-        document.getElementById(
-            "previewCollateral"
-        );
+    document.getElementById(
+        "previewCollateral"
+    ).textContent =
+        collateral.toFixed(4) +
+        " ETH";
 
 
-    const previewInterest =
-        document.getElementById(
-            "previewInterest"
-        );
-
-
-    if (previewLoan) {
-
-        previewLoan.textContent =
-            loanAmount.toFixed(4) +
-            " ETH";
-    }
-
-
-    if (previewCollateral) {
-
-        previewCollateral.textContent =
-            collateral.toFixed(4) +
-            " ETH";
-    }
-
-
-    if (previewInterest) {
-
-        previewInterest.textContent =
-            interest.toFixed(4) +
-            " ETH";
-    }
+    document.getElementById(
+        "previewInterest"
+    ).textContent =
+        interest.toFixed(4) +
+        " ETH";
 }
 
 
-// ============================================================
+// ==========================================
 // WALLET ACCOUNT CHANGE
-// ============================================================
+// ==========================================
 
-if (
-    window.ethereum
-) {
+if (window.ethereum) {
 
     window.ethereum.on(
         "accountsChanged",
         async function (accounts) {
 
-            console.log(
-                "Accounts changed:",
-                accounts
-            );
-
-
             if (
                 accounts.length === 0
             ) {
 
-                userAddress =
-                    null;
-
-                signer =
-                    null;
-
-                contract =
-                    null;
+                userAddress = null;
 
                 location.reload();
 
@@ -2747,35 +1657,25 @@ if (
 
     window.ethereum.on(
         "chainChanged",
-        function (chainId) {
-
-            console.log(
-                "Network changed:",
-                chainId
-            );
-
-
-            // Reload so the contract is recreated
-            // on the new network.
+        function () {
 
             location.reload();
+
         }
     );
 }
 
 
-// ============================================================
+// ==========================================
 // EVENT LISTENERS
-// ============================================================
+// ==========================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
 
-        // ====================================================
-        // CONNECT WALLET
-        // ====================================================
+        // Connect wallet
 
         const connectButton =
             document.getElementById(
@@ -2783,9 +1683,7 @@ document.addEventListener(
             );
 
 
-        if (
-            connectButton
-        ) {
+        if (connectButton) {
 
             connectButton.addEventListener(
                 "click",
@@ -2794,9 +1692,7 @@ document.addEventListener(
         }
 
 
-        // ====================================================
-        // LOAN FORM
-        // ====================================================
+        // Loan form
 
         const loanForm =
             document.getElementById(
@@ -2804,9 +1700,7 @@ document.addEventListener(
             );
 
 
-        if (
-            loanForm
-        ) {
+        if (loanForm) {
 
             loanForm.addEventListener(
                 "submit",
@@ -2815,9 +1709,7 @@ document.addEventListener(
         }
 
 
-        // ====================================================
-        // PREVIEW INPUTS
-        // ====================================================
+        // Preview inputs
 
         const inputs = [
 
@@ -2839,9 +1731,7 @@ document.addEventListener(
                     );
 
 
-                if (
-                    element
-                ) {
+                if (element) {
 
                     element.addEventListener(
                         "input",
@@ -2852,16 +1742,7 @@ document.addEventListener(
         );
 
 
-        // ====================================================
-        // INITIAL PREVIEW
-        // ====================================================
-
-        updateLoanPreview();
-
-
-        // ====================================================
-        // REFRESH
-        // ====================================================
+        // Refresh
 
         const refresh =
             document.getElementById(
@@ -2869,23 +1750,11 @@ document.addEventListener(
             );
 
 
-        if (
-            refresh
-        ) {
+        if (refresh) {
 
             refresh.addEventListener(
                 "click",
                 async function () {
-
-                    if (!contract) {
-
-                        alert(
-                            "Please connect MetaMask first."
-                        );
-
-                        return;
-                    }
-
 
                     await loadLoans();
 
