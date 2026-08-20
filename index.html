@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>P2P Lending DApp</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Ethers.js -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <div class="logo">
+            <span>◆</span> P2P Lending
+        </div>
+
+        <nav>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#request">Request Loan</a>
+            <a href="#loans">Loans</a>
+            <a href="#myLoans">My Loans</a>
+        </nav>
+
+        <button id="connectWallet" class="wallet-btn">
+            Connect Wallet
+        </button>
+
+    </header>
+
+
+    <!-- ================= HERO ================= -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <p class="tag">DECENTRALIZED FINANCE</p>
+
+            <h1>
+                Peer-to-Peer
+                <span>Lending</span>
+                Without Banks
+            </h1>
+
+            <p class="hero-text">
+                Borrow and lend crypto directly through smart contracts.
+                Your collateral is secured on the blockchain.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="#request" class="primary-btn">
+                    Request a Loan
+                </a>
+
+                <a href="#loans" class="secondary-btn">
+                    Browse Loans
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="hero-card">
+
+            <div class="card-top">
+                <span>Smart Contract</span>
+                <span class="online">● Online</span>
+            </div>
+
+            <div class="contract-icon">
+                ◆
+            </div>
+
+            <h3>Trustless Lending</h3>
+
+            <p>
+                Collateral, repayment and loan states
+                are controlled automatically by Solidity.
+            </p>
+
+            <div class="contract-info">
+
+                <div>
+                    <small>Network</small>
+                    <strong>Sepolia</strong>
+                </div>
+
+                <div>
+                    <small>Status</small>
+                    <strong>Active</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= DASHBOARD ================= -->
+
+    <section id="dashboard" class="section">
+
+        <div class="section-title">
+
+            <div>
+                <p class="tag">OVERVIEW</p>
+                <h2>Platform Dashboard</h2>
+            </div>
+
+        </div>
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon">◆</div>
+                <p>Total Loans</p>
+                <h3 id="totalLoans">0</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">Ξ</div>
+                <p>Active Loans</p>
+                <h3 id="activeLoans">0</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">₿</div>
+                <p>Total Volume</p>
+                <h3 id="totalVolume">0 ETH</h3>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <p>Completed</p>
+                <h3 id="completedLoans">0</h3>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= REQUEST LOAN ================= -->
+
+    <section id="request" class="section">
+
+        <div class="section-title">
+
+            <div>
+                <p class="tag">BORROW</p>
+                <h2>Request a Loan</h2>
+                <p>
+                    Lock ETH as collateral and create a loan request.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="form-card">
+
+            <form id="loanForm">
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Loan Amount (ETH)</label>
+
+                        <input
+                            type="number"
+                            id="loanAmount"
+                            placeholder="Example: 1"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Interest Rate (%)</label>
+
+                        <input
+                            type="number"
+                            id="interestRate"
+                            placeholder="Example: 10"
+                            min="1"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>Duration</label>
+
+                        <select id="duration">
+
+                            <option value="86400">
+                                1 Day
+                            </option>
+
+                            <option value="604800">
+                                7 Days
+                            </option>
+
+                            <option value="2592000">
+                                30 Days
+                            </option>
+
+                            <option value="7776000">
+                                90 Days
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Collateral (ETH)</label>
+
+                        <input
+                            type="number"
+                            id="collateral"
+                            placeholder="Example: 1.5"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <div>
+                        <span>Loan Amount</span>
+                        <strong id="previewLoan">0 ETH</strong>
+                    </div>
+
+                    <div>
+                        <span>Collateral</span>
+                        <strong id="previewCollateral">0 ETH</strong>
+                    </div>
+
+                    <div>
+                        <span>Interest</span>
+                        <strong id="previewInterest">0 ETH</strong>
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-btn full-btn"
+                >
+                    Create Loan Request
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= AVAILABLE LOANS ================= -->
+
+    <section id="loans" class="section">
+
+        <div class="section-title">
+
+            <div>
+                <p class="tag">LEND</p>
+                <h2>Available Loans</h2>
+                <p>
+                    Fund a borrower and earn interest.
+                </p>
+            </div>
+
+            <button id="refreshLoans" class="outline-btn">
+                ↻ Refresh
+            </button>
+
+        </div>
+
+
+        <div id="loanList" class="loan-grid">
+
+            <!-- Loan cards will be inserted using JavaScript -->
+
+            <div class="empty-state">
+
+                <div class="empty-icon">◆</div>
+
+                <h3>No loan requests yet</h3>
+
+                <p>
+                    New loan requests will appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= MY LOANS ================= -->
+
+    <section id="myLoans" class="section">
+
+        <div class="section-title">
+
+            <div>
+                <p class="tag">PORTFOLIO</p>
+                <h2>My Loans</h2>
+                <p>
+                    View your borrowing and lending activity.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Role</th>
+                        <th>Amount</th>
+                        <th>Collateral</th>
+                        <th>Interest</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="myLoansTable">
+
+                    <tr>
+
+                        <td colspan="7" class="table-empty">
+                            Connect your wallet to view your loans.
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= HOW IT WORKS ================= -->
+
+    <section class="section">
+
+        <div class="section-title center">
+
+            <p class="tag">PROCESS</p>
+
+            <h2>How P2P Lending Works</h2>
+
+        </div>
+
+
+        <div class="steps">
+
+            <div class="step">
+
+                <div class="step-number">01</div>
+
+                <h3>Request</h3>
+
+                <p>
+                    Borrower deposits collateral and creates
+                    a loan request.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">02</div>
+
+                <h3>Fund</h3>
+
+                <p>
+                    A lender selects the loan and sends
+                    the requested ETH.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">03</div>
+
+                <h3>Repay</h3>
+
+                <p>
+                    Borrower repays the principal plus
+                    interest before the deadline.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">04</div>
+
+                <h3>Complete</h3>
+
+                <p>
+                    The lender receives repayment and
+                    collateral returns to the borrower.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <div class="footer-logo">
+            ◆ P2P Lending DApp
+        </div>
+
+        <p>
+            Decentralized peer-to-peer lending powered by Ethereum.
+        </p>
+
+        <p class="copyright">
+            © 2026 P2P Lending DApp
+        </p>
+
+    </footer>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
