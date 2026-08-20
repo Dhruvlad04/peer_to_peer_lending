@@ -23,7 +23,7 @@ let currentChainId = null;
 // on the SAME network currently selected in MetaMask.
 
 const CONTRACT_ADDRESS =
-    "0x00822919dff2AeD42fa81cc76218ea2caa8dCCb1";
+    "0x21B83E34f9a5b25Ede1E2353e2ad3Bf06eb5c47E";
 
 
 // ============================================================
@@ -1707,10 +1707,10 @@ async function loadLoans() {
 
                             <strong>
                                 ${formatDuration(
-                                    Number(
-                                        loan.duration
-                                    )
-                                )}
+                    Number(
+                        loan.duration
+                    )
+                )}
                             </strong>
 
                         </div>
@@ -1735,8 +1735,8 @@ async function loadLoans() {
 
                         Borrower:
                         ${shortAddress(
-                            loan.borrower
-                        )}
+                    loan.borrower
+                )}
 
                     </div>
 
@@ -2240,7 +2240,7 @@ function getStatusClass(
 ) {
 
     switch (
-        Number(status)
+    Number(status)
     ) {
 
         case 0:
@@ -2617,7 +2617,7 @@ if (
 
     window.ethereum.on(
         "accountsChanged",
-        async function(accounts) {
+        async function (accounts) {
 
             console.log(
                 "Accounts changed:",
@@ -2650,7 +2650,7 @@ if (
 
     window.ethereum.on(
         "chainChanged",
-        function(chainId) {
+        function (chainId) {
 
             console.log(
                 "Network changed:",
@@ -2673,7 +2673,7 @@ if (
 
 document.addEventListener(
     "DOMContentLoaded",
-    function() {
+    function () {
 
 
         // ====================================================
@@ -2778,7 +2778,7 @@ document.addEventListener(
 
             refresh.addEventListener(
                 "click",
-                async function() {
+                async function () {
 
                     if (!contract) {
 
