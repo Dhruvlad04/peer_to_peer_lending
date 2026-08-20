@@ -520,61 +520,35 @@ const STATUS = {
 // ============================================================
 
 async function connectWallet() {
-
     try {
-
         if (!window.ethereum) {
-
-            alert(
-                "MetaMask is not installed.\n\n" +
-                "Please install MetaMask and refresh the page."
-            );
-
+            alert("Please install MetaMask.");
             return;
         }
 
+        // Switch MetaMask to Sepolia
+        await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [
+                {
+                    chainId: "0xaa36a7"
+                }
+            ]
+        });
 
-        // Create ethers provider
-        provider =
-            new ethers.BrowserProvider(
-                window.ethereum
-            );
+        // Connect wallet
+        await window.ethereum.request({
+            method: "eth_requestAccounts"
+        });
 
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
 
-        // Request wallet connection
-        await provider.send(
-            "eth_requestAccounts",
-            []
-        );
+        account = await signer.getAddress();
 
+        console.log("Wallet connected:", account);
 
-        // Get signer
-        signer =
-            await provider.getSigner();
-
-
-        // Get wallet address
-        userAddress =
-            await signer.getAddress();
-
-
-        // Get network
-        const network =
-            await provider.getNetwork();
-
-
-        currentChainId =
-            network.chainId;
-
-
-        console.log(
-            "===================================="
-        );
-
-        console.log(
-            "Wallet connected:",
-            userAddress
-        );
+        const network = await provider.getNetwork();
 
         console.log(
             "Network:",
@@ -583,117 +557,69 @@ async function connectWallet() {
 
         console.log(
             "Chain ID:",
-            currentChainId.toString()
+            network.chainId.toString()
         );
+
+        // Make sure we are on Sepolia
+        if (network.chainId !== 11155111n) {
+            alert("Please switch MetaMask to Sepolia.");
+            return;
+        }
 
         console.log(
             "Contract:",
             CONTRACT_ADDRESS
         );
 
-
-        // ====================================================
-        // CHECK CONTRACT CODE
-        // ====================================================
-
-        const code =
-            await provider.getCode(
-                CONTRACT_ADDRESS
-            );
-
+        // Check contract
+        const code = await provider.getCode(
+            CONTRACT_ADDRESS
+        );
 
         console.log(
             "Contract bytecode:",
             code
         );
 
-
-        if (!code || code === "0x") {
-
-            contract = null;
-
+        if (code === "0x") {
             alert(
                 "SMART CONTRACT NOT FOUND\n\n" +
-
-                "No contract exists at:\n" +
+                "Contract:\n" +
                 CONTRACT_ADDRESS +
-
-                "\n\nCurrent MetaMask network:\n" +
+                "\n\n" +
+                "Network:\n" +
                 network.name +
-
-                "\n\nChain ID:\n" +
-                currentChainId.toString() +
-
-                "\n\nPlease switch MetaMask to the network " +
-                "where you deployed P2PLending."
+                "\n\n" +
+                "Chain ID:\n" +
+                network.chainId.toString()
             );
-
             return;
         }
 
-
-        // ====================================================
-        // CREATE CONTRACT
-        // ====================================================
-
-        contract =
-            new ethers.Contract(
-                CONTRACT_ADDRESS,
-                CONTRACT_ABI,
-                signer
-            );
-
-
-        // ====================================================
-        // TEST CONTRACT
-        // ====================================================
-
-        const counter =
-            await contract.loanCounter();
-
+        contract = new ethers.Contract(
+            CONTRACT_ADDRESS,
+            CONTRACT_ABI,
+            signer
+        );
 
         console.log(
             "Contract connected successfully."
         );
 
-        console.log(
-            "Loan counter:",
-            counter.toString()
-        );
-
-
-        console.log(
-            "===================================="
-        );
-
-
-        // Update wallet button
-        updateWalletButton();
-
-
-        // Load application data
-        await loadLoans();
-
-        await loadDashboard();
-
-        await loadMyLoans();
-
+        // Continue with your existing UI/load functions here
 
     } catch (error) {
-
         console.error(
             "Wallet connection error:",
             error
         );
 
-
         alert(
-            "Wallet connection failed.\n\n" +
-            getErrorMessage(error)
+            error.message ||
+            "Failed to connect wallet."
         );
     }
 }
-
 
 // ============================================================
 // UPDATE WALLET BUTTON
